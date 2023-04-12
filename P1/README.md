@@ -1,8 +1,14 @@
 # P1
 
-Compilamos el programa con:
-`mpicc main.c (acepta tambien la opcion -o)`
+Compilamos el programa con:  
+```
+mpicc main.c
+```
 
+Y se ejecuta con:  
+```
+mpirun -np X ./a.out
+```
 
-Y se ejecuta con:
-`mpirun -np 4 ./a.out (siendo -np el numero de procesos)`
+<span style="color: rgba(255, 255, 255, 0.5)">_compilar el programa acepta tambien la opción -o_</span>
+<span style="color: rgba(255, 255, 255, 0.5)">_-np es el numero de procesos que vamos a crear_</span>
