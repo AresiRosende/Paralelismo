@@ -24,12 +24,11 @@ int main(int argc, char *argv[])
   if(argc != 3){
     printf("Numero incorrecto de parametros\nLa sintaxis debe ser: program n L\n  program es el nombre del ejecutable\n  n es el tamaño de la cadena a generar\n  L es la letra de la que se quiere contar apariciones (A, C, G o T)\n");
     exit(1); 
-  }
-    
+  } 
+  
   int countrec, numprocs, rank, i, n, count=0;
   char *cadena;
   char L;
-  char processor_name[MPI_MAX_PROCESSOR_NAME];
 
   MPI_Status status;
   MPI_Init(&argc, &argv);
