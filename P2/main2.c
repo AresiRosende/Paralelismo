@@ -42,6 +42,7 @@ int MPI_FlattreeBCast(void *sendbuf, void *recvbuf, int count, MPI_Datatype data
         *aux2 += *((int *) recvbuf);
       }
       *((int *)recvbuf) = *aux2;
+      //printf("%d\n",*aux);
     }
     return MPI_SUCCESS;
 }
@@ -99,7 +100,7 @@ int main(int argc, char *argv[])
 
   MPI_BinomialBCast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
   MPI_BinomialBCast(&L, 1, MPI_CHAR, 0, MPI_COMM_WORLD);
-  MPI_Bcast(&count, 1, MPI_INT, rank, MPI_COMM_WORLD);
+  //MPI_Bcast(&count, 1, MPI_INT, rank, MPI_COMM_WORLD);
 
   cadena = (char *) malloc(n*sizeof(char));
   inicializaCadena(cadena, n);
