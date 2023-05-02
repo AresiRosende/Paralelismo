@@ -12,8 +12,7 @@
    T -> 3
    N -> 4*/
 
-//#define M  1000000 // Number of sequences
-#define M  800000 // debug
+#define M  1000000 // Number of sequences
 #define N  200  // Number of bases per sequence
 
 unsigned int g_seed = 0;
@@ -46,7 +45,7 @@ int base_distance(int base1, int base2){
     return 1;
   }
 
-  if((base2 == 1) && (base1 == 2)) {
+  if((base2 == 2) && (base1 == 1)) {
     return 1;
   }
 
@@ -71,6 +70,8 @@ int main(int argc, char *argv[] ) {
 
 
   if (!rank){
+    //only process 0 allocs memory and initializes the matrixes
+
     data1 = (int *) malloc(M*N*sizeof(int));
     data2 = (int *) malloc(M*N*sizeof(int));
     result = (int *) malloc(M*sizeof(int));
@@ -85,15 +86,20 @@ int main(int argc, char *argv[] ) {
     }
   }
 
+  //each process initializes their own submatrixes
+  //to store the part of the data they have to process
   subdata1 = (int *) malloc(mpp*N*sizeof(int));
   subdata2 = (int *) malloc(mpp*N*sizeof(int));
   subresult = (int *) malloc(mpp * sizeof(int));
 
+  //start time for communication
   gettimeofday(&tPreSc, NULL);
 
+  //sends from process 0 to every process mpp*N elements of data to subdata
   MPI_Scatter(data1, mpp * N, MPI_INT, subdata1, mpp * N, MPI_INT, 0, MPI_COMM_WORLD);
   MPI_Scatter(data2, mpp * N, MPI_INT, subdata2, mpp * N, MPI_INT, 0, MPI_COMM_WORLD);
 
+  //end time for communication and start time for computation
   gettimeofday(&tPosSc, NULL);
 
   int mpplocal = mpp;
@@ -101,6 +107,8 @@ int main(int argc, char *argv[] ) {
   //less than mpp sequences to process
   if(rank == numprocs-1) mpp = M - mpp*(numprocs-1);
 
+
+  //calculates the base distance of each subdata from each process
   for(i=0;i<mpplocal;i++) {
     subresult[i]=0;
     for(j=0;j<N;j++) {
@@ -108,10 +116,13 @@ int main(int argc, char *argv[] ) {
     }
   }
 
+  //end time for computation and start time for communication
   gettimeofday(&tPosComp, NULL);
     
+  //retrieves the data of subresult from every process into result
   MPI_Gather(subresult, mpp, MPI_INT, result, mpp, MPI_INT, 0, MPI_COMM_WORLD);   //result
   
+  //end time for communication
   gettimeofday(&tPosGath, NULL);
 
 
@@ -120,6 +131,8 @@ int main(int argc, char *argv[] ) {
   //tPosComp - tPosSc
   int tComp = (tPosComp.tv_usec - tPosSc.tv_usec)+ 1000000 * (tPosComp.tv_sec - tPosSc.tv_sec);
 
+
+  //debugging options
   if(!rank && DEBUG == 1){       
     /* Display result */
     int checksum = 0;
@@ -133,24 +146,29 @@ int main(int argc, char *argv[] ) {
     }
   }
 
+  //process 0 prints the results
   if(!rank){
     printf("Process 0 -> Communication time: %lfs | Computation time: %lfs\n", (double) tComm/1E6, (double) tComp/1E6);
     for(int k = 1; k < numprocs; k++){
+      //receives the times from each process
       MPI_Recv(&tComm, 1, MPI_INT, k, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       MPI_Recv(&tComp, 1, MPI_INT, k, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       printf("Process %d -> Communication time: %lfs | Computation time: %lfs\n", k, (double) tComm/1E6, (double) tComp/1E6);
     }
   } else {
+    //if the process is not 0, then sends its time to process 0
     MPI_Send(&tComm, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
     MPI_Send(&tComp, 1, MPI_INT, 0, 1, MPI_COMM_WORLD);  
   }
 
+  //since process 0 created these variables, only it has to free them
   if(!rank){
     free(data1);
     free(data2);
     free(result);
   }
 
+  //every process has to free their own local variables
   free(subdata1);
   free(subdata2);
   free(subresult);
